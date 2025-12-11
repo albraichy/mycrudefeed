@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Converter KBPD <-> Sm3/h</title>
+    <style>
+        :root {
+            --bg-color: #f4f4f9;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --input-bg: #f0f0f0;
+            --input-border: #cccccc;
+            --btn-bg: #007bff;
+            --btn-text: #ffffff;
+        }
+
+        /* Dark Mode Support based on System Preference */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #121212;
+                --card-bg: #1e1e1e;
+                --text-color: #e0e0e0;
+                --input-bg: #2c2c2c;
+                --input-border: #444444;
+                --btn-bg: #4caf50;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .converter-card {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        h2 { margin: 0; font-size: 1.2rem; }
+
+        .lang-btn {
+            background: transparent;
+            border: 1px solid var(--text-color);
+            color: var(--text-color);
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .input-group { margin-bottom: 1.5rem; }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--input-border);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1.1rem;
+            box-sizing: border-box; /* Ensures padding doesn't affect width */
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--btn-bg);
+        }
+
+        /* Formatting for Arabic Layout */
+        body.rtl { direction: rtl; }
+        body.rtl .header { flex-direction: row-reverse; }
+    </style>
+</head>
+<body>
+
+    <div class="converter-card">
+        <div class="header">
+            <h2 id="pageTitle">Flow Rate Converter</h2>
+            <button class="lang-btn" onclick="toggleLanguage()">عربي</button>
+        </div>
+
+        <div class="input-group">
+            <label for="kbpdInput" id="labelKbpd">KBPD (Thousand Barrels/Day)</label>
+            <input type="number" id="kbpdInput" placeholder="0" oninput="convert('kbpd')">
+        </div>
+
+        <div class="input-group">
+            <label for="sm3Input" id="labelSm3">Sm³/h (Standard Cubic Meters/Hour)</label>
+            <input type="number" id="sm3Input" placeholder="0" oninput="convert('sm3')">
+        </div>
+    </div>
+
+    <script>
+        const factor = 6.62;
+        let isArabic = false;
+
+        const uiText = {
+            en: {
+                title: "Flow Rate Converter",
+                kbpd: "KBPD (Thousand Barrels/Day)",
+                sm3: "Sm³/h (Standard Cubic Meters/Hour)",
+                btn: "عربي"
+            },
+            ar: {
+                title: "محول معدل التدفق",
+                kbpd: "ألف برميل يومياً (KBPD)",
+                sm3: "متر مكعب قياسي بالساعة (Sm³/h)",
+                btn: "English"
+            }
+        };
+
+        function convert(source) {
+            const kbpdInput = document.getElementById('kbpdInput');
+            const sm3Input = document.getElementById('sm3Input');
+
+            if (source === 'kbpd') {
+                const val = parseFloat(kbpdInput.value);
+                if (!isNaN(val)) {
+                    // KBPD * 6.62 = Sm3/h
+                    sm3Input.value = (val * factor).toFixed(2);
+                } else {
+                    sm3Input.value = '';
+                }
+            } else {
+                const val = parseFloat(sm3Input.value);
+                if (!isNaN(val)) {
+                    // Sm3/h / 6.62 = KBPD
+                    kbpdInput.value = (val / factor).toFixed(2);
+                } else {
+                    kbpdInput.value = '';
+                }
+            }
+        }
+
+        function toggleLanguage() {
+            isArabic = !isArabic;
+            const lang = isArabic ? 'ar' : 'en';
+            
+            // Update Text
+            document.getElementById('pageTitle').innerText = uiText[lang].title;
+            document.getElementById('labelKbpd').innerText = uiText[lang].kbpd;
+            document.getElementById('labelSm3').innerText = uiText[lang].sm3;
+            document.querySelector('.lang-btn').innerText = uiText[lang].btn;
+
+            // Update Direction
+            if (isArabic) {
+                document.body.classList.add('rtl');
+                document.documentElement.lang = 'ar';
+            } else {
+                document.body.classList.remove('rtl');
+                document.documentElement.lang = 'en';
+            }
+        }
+    </script>
+</body>
+</html>
