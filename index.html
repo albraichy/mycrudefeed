@@ -15,7 +15,6 @@
             --btn-text: #ffffff;
         }
 
-        /* Dark Mode Support */
         @media (prefers-color-scheme: dark) {
             :root {
                 --bg-color: #121212;
@@ -76,7 +75,6 @@
             font-size: 0.9rem;
         }
 
-        /* inputmode=decimal triggers numeric keypad on mobile */
         input {
             width: 100%;
             padding: 12px;
@@ -135,23 +133,39 @@
             }
         };
 
-        // Helper function to handle Arabic digits and commas
-        function parseLocaleNumber(stringNumber) {
-            if (!stringNumber) return NaN;
+        // 1. تنظيف المدخلات وتحويلها لرقم انجليزي للحساب
+        function parseInput(str) {
+            if (!str) return NaN;
             
-            // 1. Replace Arabic numerals with English numerals
+            // تحويل الأرقام العربية إلى إنجليزية
             const map = ["٠","١","٢","٣","٤","٥","٦","٧","٨","٩"];
-            let normalized = stringNumber.toString();
-            
+            let normalized = str.toString();
             for (let i = 0; i < 10; i++) {
                 normalized = normalized.replace(new RegExp(map[i], "g"), i);
             }
 
-            // 2. Replace Arabic comma with dot, and ensure only valid chars remain
-            normalized = normalized.replace(/,/g, '.');
+            // استبدال الفاصلة العربية بنقطة
+            normalized = normalized.replace(/،/g, '.');
             
-            // 3. Return parsed float
             return parseFloat(normalized);
+        }
+
+        // 2. تحويل الرقم الناتج إلى الصيغة المناسبة (عربي أو انجليزي) للعرض
+        function formatOutput(num) {
+            // أول شي نخليه رقم انجليزي بفاصلتين
+            let enStr = num.toFixed(2);
+            
+            // اذا اللغة مو عربية، رجعه نفس ما هو
+            if (!isArabic) return enStr;
+
+            // اذا عربي، حول الأرقام والنقطة
+            const map = ["٠","١","٢","٣","٤","٥","٦","٧","٨","٩"];
+            let arStr = enStr.replace(/\./g, '،'); // النقطة تصير فاصلة عربية
+            
+            for (let i = 0; i < 10; i++) {
+                arStr = arStr.replace(new RegExp(i, "g"), map[i]);
+            }
+            return arStr;
         }
 
         function convert(source) {
@@ -159,16 +173,17 @@
             const sm3Input = document.getElementById('sm3Input');
 
             if (source === 'kbpd') {
-                const val = parseLocaleNumber(kbpdInput.value);
+                const val = parseInput(kbpdInput.value);
                 if (!isNaN(val)) {
-                    sm3Input.value = (val * factor).toFixed(2);
+                    // الحساب دايماً بالارقام الانجليزية، بس العرض يعتمد على اللغة
+                    sm3Input.value = formatOutput(val * factor);
                 } else {
                     if(kbpdInput.value === '') sm3Input.value = '';
                 }
             } else {
-                const val = parseLocaleNumber(sm3Input.value);
+                const val = parseInput(sm3Input.value);
                 if (!isNaN(val)) {
-                    kbpdInput.value = (val / factor).toFixed(2);
+                    kbpdInput.value = formatOutput(val / factor);
                 } else {
                     if(sm3Input.value === '') kbpdInput.value = '';
                 }
@@ -179,17 +194,27 @@
             isArabic = !isArabic;
             const lang = isArabic ? 'ar' : 'en';
             
+            // تحديث النصوص
             document.getElementById('pageTitle').innerText = uiText[lang].title;
             document.getElementById('labelKbpd').innerText = uiText[lang].kbpd;
             document.getElementById('labelSm3').innerText = uiText[lang].sm3;
             document.querySelector('.lang-btn').innerText = uiText[lang].btn;
 
+            // تحديث الاتجاه
             if (isArabic) {
                 document.body.classList.add('rtl');
                 document.documentElement.lang = 'ar';
             } else {
                 document.body.classList.remove('rtl');
                 document.documentElement.lang = 'en';
+            }
+
+            // تحديث الأرقام الموجودة حالياً بالخانات حسب اللغة الجديدة
+            // نعيد تشغيل دالة التحويل بناء على الخانة اللي فيها بيانات
+            const kbpdVal = document.getElementById('kbpdInput').value;
+            if(kbpdVal) {
+                convert('kbpd'); // اعادة حساب وتنسيق
+                // ملاحظة: المدخل نفسه ما نغيره عشان ما نخرب على المستخدم، بس النتيجة تتحدث
             }
         }
     </script>
